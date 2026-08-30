@@ -16,14 +16,15 @@ async function register(req, res, next) {
     // نشفر الباسورد قبل ما نحفظه
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    const crypto = require('crypto'); // ضيفها فوق الملف مع باقي الـ requires
+
     const newUser = {
-      id: users.length + 1,
+      id: crypto.randomUUID(), // ← بدل users.length + 1
       name,
       email,
       password: hashedPassword,
-      role: 'user' // كل يوزر جديد يبقى role عادي بشكل تلقائي
+      role: 'user'
     };
-
     users.push(newUser);
 
     res.status(201).json({ message: 'تم إنشاء الحساب بنجاح' });

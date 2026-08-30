@@ -1,17 +1,23 @@
+const crypto = require('crypto');
+
 let posts = [
   {
-    id: 1,
+    id: crypto.randomUUID(),
     title: 'أول بوست في المدونة',
     content: 'بوست اولي للتجربة',
     author: 'أحمد',
-    image: null
+    authorId: null,
+    image: null,
+    likedBy: [] // ← جديد
   },
   {
-    id: 2,
+    id: crypto.randomUUID(),
     title: 'بوست تاني',
     content: 'بوست ثاني للتجربة',
     author: 'سارة',
-    image: null
+    authorId: null,
+    image: null,
+    likedBy: [] // ← جديد
   }
 ];
 

@@ -5,8 +5,9 @@ const postsRoutes = require('./routes/posts');
 const authRoutes = require('./routes/auth'); // ← جديد
 
 const app = express();
-
-app.use(cors());
+app.use(cors({
+  origin: "https://ziadsaed163-boop.github.io"
+}));
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 

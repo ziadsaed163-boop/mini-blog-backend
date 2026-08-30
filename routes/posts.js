@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const crypto = require("crypto")
 const posts = require('../data/posts');
 const authenticate = require('../middlewares/authenticate');
 const upload = require('../middlewares/uploadMiddleware');
@@ -18,12 +19,15 @@ router.post('/', authenticate, upload.single('image'), (req, res) => {
   }
 
   const newPost = {
-    id: posts.length + 1,
+      id: crypto.randomUUID(),
     title,
     content,
     author: req.user.name,
-    authorId: req.user.id, // ← جديد: هنحتاجه عشان نتأكد مين صاحب البوست
-    image: req.file ? `http://localhost:5000/uploads/${req.file.filename}` : null
+    authorId: req.user.id, 
+    image: req.file
+  ? `http://localhost:5000/uploads/${req.file.filename}`
+  : null,
+   likedBy: []
   };
 
   posts.push(newPost);
@@ -31,11 +35,35 @@ router.post('/', authenticate, upload.single('image'), (req, res) => {
   res.status(201).json({ message: 'تم إضافة البوست بنجاح', post: newPost });
 });
 
-// DELETE - حذف بوست (صاحبه بس أو الأدمن)
-router.delete('/:id', authenticate, (req, res) => {
-  const postId = parseInt(req.params.id);
-  const postIndex = posts.findIndex(p => p.id === postId);
+// DELETE - حذف بوست (صاحبه بس أو الأدمن)// POST - عمل/إلغاء Like لبوست
+router.post('/:id/like', authenticate, (req, res) => {
+  const postId = req.params.id;
+  const post = posts.find(p => p.id === postId);
 
+  if (!post) {
+    return res.status(404).json({ message: 'البوست مش موجود' });
+  }
+
+  const userId = req.user.id;
+  const alreadyLiked = post.likedBy.includes(userId);
+
+  if (alreadyLiked) {
+    // اليوزر عمل لايك قبل كده، فهنشيله (Unlike)
+    post.likedBy = post.likedBy.filter(id => id !== userId);
+  } else {
+    // اليوزر مش عامل لايك، فهنضيفه
+    post.likedBy.push(userId);
+  }
+
+  res.json({
+    message: alreadyLiked ? 'تم إلغاء الإعجاب' : 'تم الإعجاب بالبوست',
+    likesCount: post.likedBy.length,
+    liked: !alreadyLiked
+  });
+});
+router.delete('/:id', authenticate, (req, res) => {
+const postId = parseInt(req.params.id);
+const postIndex = posts.findIndex(p => p.id === postId);
   if (postIndex === -1) {
     return res.status(404).json({ message: 'البوست مش موجود' });
   }
