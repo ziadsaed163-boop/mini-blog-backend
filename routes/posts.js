@@ -4,7 +4,7 @@ const crypto = require("crypto")
 const posts = require('../data/posts');
 const authenticate = require('../middlewares/authenticate');
 const upload = require('../middlewares/uploadMiddleware');
-
+const comments = require('../data/comments');
 // GET - جيب كل البوستات
 router.get('/', (req, res) => {
   res.json(posts);
@@ -60,6 +60,39 @@ router.post('/:id/like', authenticate, (req, res) => {
     likesCount: post.likedBy.length,
     liked: !alreadyLiked
   });
+});
+// GET - جيب كل تعليقات بوست معين
+router.get('/:id/comments', (req, res) => {
+  const postId = req.params.id;
+  const postComments = comments.filter(c => c.postId === postId);
+  res.json(postComments);
+});
+
+// POST - إضافة تعليق على بوست معين (محتاج تسجيل دخول)
+router.post('/:id/comments', authenticate, (req, res) => {
+  const postId = req.params.id;
+  const { content } = req.body;
+
+  const post = posts.find(p => p.id === postId);
+  if (!post) {
+    return res.status(404).json({ message: 'البوست مش موجود' });
+  }
+
+  if (!content || content.trim() === '') {
+    return res.status(400).json({ message: 'محتوى التعليق مطلوب' });
+  }
+
+  const newComment = {
+    id: crypto.randomUUID(),
+    postId,
+    content,
+    authorId: req.user.id,
+    authorName: req.user.name
+  };
+
+  comments.push(newComment);
+
+  res.status(201).json({ message: 'تم إضافة التعليق', comment: newComment });
 });
 router.delete('/:id', authenticate, (req, res) => {
 const postId = parseInt(req.params.id);
